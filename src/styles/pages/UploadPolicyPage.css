@@ -1,0 +1,254 @@
+.upload-policy-container {
+  background-color: #f4f5f7;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.upload-page-header {
+  background: linear-gradient(to right, #ba2222, #4b006e);
+  padding: 0.75rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.back-to-records-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.back-to-records-button:hover {
+  opacity: 1;
+}
+
+.upload-policy-main {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.upload-form-card {
+  background: white;
+  border-radius: 8px;
+  padding: 2.5rem 3rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.form-logo {
+  height: 35px;
+  width: auto;
+}
+
+.form-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label, .form-group-checkbox label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #4b5563;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.form-group input[type="text"],
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #1f2937;
+  background-color: #f9fafb;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input[type="text"]::placeholder,
+.form-group textarea::placeholder {
+  color: #9ca3af;
+}
+
+.form-group input[type="text"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #E31837;
+  box-shadow: 0 0 0 3px rgba(227, 24, 55, 0.1);
+  background-color: white;
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-group-checkbox {
+  margin-bottom: 1.5rem;
+}
+
+.form-group-checkbox input[type="checkbox"] {
+  display: none;
+}
+
+.form-group-checkbox label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #E31837;
+  border-radius: 4px;
+  margin-right: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+}
+
+.custom-checkbox svg {
+  color: white;
+  font-size: 12px;
+  transition: transform 0.2s;
+  transform: scale(0);
+}
+
+.form-group-checkbox input[type="checkbox"]:checked + label .custom-checkbox {
+  background-color: #E31837;
+}
+
+.form-group-checkbox input[type="checkbox"]:checked + label .custom-checkbox svg {
+  transform: scale(1);
+}
+
+.drop-zone {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+  transition: border-color 0.2s, background-color 0.2s;
+  background-color: #fdfdff;
+}
+
+.drop-zone.dragging {
+  border-color: #E31837;
+  background-color: #fff8f9;
+}
+
+.drop-icon {
+  font-size: 2rem;
+  color: #E31837;
+  margin-bottom: 0.5rem;
+}
+
+.drop-zone p {
+  margin: 0 0 0.25rem 0;
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.drop-zone span {
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.browse-button {
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 0.4rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.browse-button:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.file-preview {
+  background-color: #f3f4f6;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+.file-preview p {
+  font-weight: 600;
+  color: #111827;
+}
+.file-preview span {
+  color: #4b5563;
+  margin-bottom: 0;
+}
+.file-preview button {
+  margin-top: 0.75rem;
+  background: none;
+  border: none;
+  color: #E31837;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.upload-bucket-button {
+  width: 100%;
+  padding: 0.875rem;
+  background-color: #E31837;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.upload-bucket-button:hover {
+  background-color: #c4142d;
+}
+
+@media (max-width: 768px) {
+  .upload-policy-main {
+    padding: 1rem;
+  }
+  .upload-form-card {
+    padding: 1.5rem;
+  }
+  .form-logo {
+    display: none;
+  }
+} 

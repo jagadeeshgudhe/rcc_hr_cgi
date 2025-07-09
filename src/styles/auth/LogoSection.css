@@ -1,0 +1,37 @@
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.logo1 {
+  width: 140px;
+  height: auto;
+  padding: 8px;
+  background-color: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo1 img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.logo1 img:hover {
+  transform: scale(1.05);
+}
+
+@media (max-width: 480px) {
+  .logo1 {
+    width: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+
+
+}

@@ -1,0 +1,399 @@
+{
+	"info": {
+		"_postman_id": "92c369f0-a4a5-4526-b32c-7aab87e9061e",
+		"name": "HR Chat API",
+		"description": "A collection to test the HR Chat API endpoints.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser\",\n    \"usermail\": \"testuser@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"User\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"register"
+							]
+						},
+						"description": "Registers a new user. The user will be inactive by default."
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "Logs in a user and saves the JWT token to a collection variable `jwt_token`."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"logout"
+							]
+						},
+						"description": "Logs out the current user by adding their token to a blocklist."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for user authentication."
+		},
+		{
+			"name": "User Actions",
+			"item": [
+				{
+					"name": "Get Active Countries",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/active-countries",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"active-countries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get HR Policy Documents by Region",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/hrpolicy-documents?region=USA",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"hrpolicy-documents"
+							],
+							"query": [
+								{
+									"key": "region",
+									"value": "USA"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "QA",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"question\": \"What is the vacation policy?\",\n    \"region\": \"USA\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/qa",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"qa"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Feedback",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"some-unique-id-from-qa-response\",\n    \"question\": \"What is the vacation policy?\",\n    \"response\": \"The answer you received.\",\n    \"rating\": 5,\n    \"feedback\": \"This was a great answer!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/submit-feedback",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"submit-feedback"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "General endpoints for authenticated users."
+		},
+		{
+			"name": "Admin Actions",
+			"item": [
+				{
+					"name": "Upload File",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "doc_name",
+									"value": "HR Policy 2024",
+									"type": "text"
+								},
+								{
+									"key": "doc_url",
+									"value": "http://internal.docs/hr-policy-2024",
+									"type": "text"
+								},
+								{
+									"key": "selected_region",
+									"value": "USA",
+									"type": "text"
+								},
+								{
+									"key": "doc_description",
+									"value": "The latest HR policy document for the USA region.",
+									"type": "text"
+								},
+								{
+									"key": "doc_latest",
+									"value": "true",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/uploadfile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"uploadfile"
+							]
+						},
+						"description": "Upload a new PDF document. Requires Admin role."
+					},
+					"response": []
+				},
+				{
+					"name": "Get File Details for Deletion",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/file-details?file=example.pdf&username=adminuser",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"file-details"
+							],
+							"query": [
+								{
+									"key": "file",
+									"value": "example.pdf"
+								},
+								{
+									"key": "username",
+									"value": "adminuser"
+								}
+							]
+						},
+						"description": "Get details of a specific file uploaded by a user. Requires Admin role."
+					},
+					"response": []
+				},
+				{
+					"name": "Get File Report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/file-report",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"file-report"
+							]
+						},
+						"description": "Get a report of all uploaded files. Requires Admin role."
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle File Active Status",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"file_name\": \"example.pdf\",\n    \"md5_text\": \"d41d8cd98f00b204e9800998ecf8427e\",\n    \"active_flag\": \"1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/toggle-file-active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"toggle-file-active"
+							]
+						},
+						"description": "Activate or deactivate a file for QA. 'active_flag' should be '1' for active, '0' for inactive."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete File Entries",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"file_name\": \"example.pdf\",\n    \"md5_text\": \"d41d8cd98f00b204e9800998ecf8427e\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/delete-file-entries",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"delete-file-entries"
+							]
+						},
+						"description": "Removes all database entries associated with a file."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/active-users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"active-users"
+							]
+						},
+						"description": "Get a list of all active users. Requires Admin role."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints that require Admin role."
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://hrqa-api-439963159684.us-central1.run.app",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

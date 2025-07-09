@@ -1,0 +1,79 @@
+.suggestions-container {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.suggestions-title {
+  font-size: 0.85rem;
+  color: #374151;
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.suggestion-button {
+  text-align: left;
+  padding: 4px 10px;
+  background: rgba(37, 99, 235, 0.05);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  border-radius: 12px;
+  color: #2563eb;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 0 1 auto;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestion-button:hover {
+  background: rgba(37, 99, 235, 0.1);
+  transform: translateY(-1px);
+}
+
+.suggestion-button:active {
+  transform: translateY(0);
+}
+
+/* Document URL styling */
+.document-url {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 0.8rem;
+  color: #6B7280;
+}
+
+.document-url a {
+  color: #2563eb;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.document-url a:hover {
+  text-decoration: underline;
+}
+
+/* Animation for new suggestions */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.suggestions-container {
+  animation: slideIn 0.3s ease-out;
+} 

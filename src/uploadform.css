@@ -1,0 +1,150 @@
+.upload-container {
+  margin-bottom: 32px;
+  margin-left: 222px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Upload Form Styling */
+.upload-form {
+  background: #f9f9f9;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 1;
+}
+
+.upload-form h2 {
+  font-size: 20px;
+  color: #1e3a8a;
+  text-align: center;
+}
+
+.upload-form input,
+.upload-form select,
+.upload-form button {
+  padding: 10px 14px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.upload-form button {
+  background-color: #d70000;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.upload-form button:hover {
+  background-color: #a00000;
+}
+
+/* Blur background when preview is shown */
+.blur-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(5px);
+  z-index: 10;
+}
+
+/* Preview Modal Styling */
+.preview-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 24px;
+  border-radius: 10px;
+  z-index: 20;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.preview-modal h3 {
+  color: #1e3a8a;
+  margin-bottom: 16px;
+}
+
+.preview-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview-meta {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.preview-display {
+  max-height: 300px;
+  overflow: auto;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.preview-thumbnail {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.preview-pdf {
+  width: 100%;
+  height: 300px;
+  border: none;
+}
+
+.preview-note {
+  font-style: italic;
+  color: gray;
+}
+
+.preview-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.preview-btn,
+.confirm-btn {
+  padding: 10px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.preview-btn {
+  background-color: #ccc;
+  color: #333;
+}
+
+.preview-btn:hover {
+  background-color: #ef1616;
+}
+
+.confirm-btn {
+  background-color: #19e80e;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #00a000;
+}

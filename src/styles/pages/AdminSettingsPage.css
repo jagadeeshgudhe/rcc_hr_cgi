@@ -1,0 +1,252 @@
+.admin-settings-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.settings-main-content {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 80vh;
+  overflow-y: auto;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.settings-header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.settings-content {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+}
+
+/* New Styles for Document Report */
+.documents-report-section h2 {
+  font-size: 1.5rem;
+  color: #374151;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.report-controls {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.report-controls label {
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.report-type-dropdown {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  min-width: 200px;
+  font-size: 1rem;
+}
+
+.documents-table-container {
+  max-height: 400px;
+  overflow: hidden;
+  position: relative;
+}
+
+.documents-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.documents-table thead {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
+}
+
+.documents-table tbody {
+  display: block;
+  max-height: 320px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.documents-table tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.documents-table th, .documents-table td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid #eaeaea;
+  width: 50%;
+  box-sizing: border-box;
+}
+
+.documents-table th {
+  background-color: #f9fafb;
+  color: #4b5563;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.documents-table tbody tr:hover {
+  background-color: #f3f4f6;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  border: none;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background-color 0.2s;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.link-button.open {
+  background-color: #2563eb;
+  color: #fff;
+}
+.link-button.open:hover {
+  background-color: #1d4ed8;
+}
+
+.link-button.copy {
+  background-color: #6b7280;
+  color: #fff;
+}
+.link-button.copy:hover {
+  background-color: #374151;
+}
+
+.link-button.download {
+  background-color: #22c55e;
+  color: #fff;
+}
+.link-button.download:hover {
+  background-color: #16a34a;
+}
+
+.link-button svg {
+  margin-left: 0.4em;
+  font-size: 1em;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .settings-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .report-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.hr-policies-section {
+  margin-top: 2.5rem;
+}
+
+.hr-policies-section h2 {
+  font-size: 1.25rem;
+  color: #374151;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.hr-policies-table-container {
+  overflow-x: auto;
+}
+
+.hr-policies-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.hr-policies-table th,
+.hr-policies-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.hr-policies-table th {
+  background: #f9fafb;
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.hr-policies-table tbody tr:hover {
+  background: #f3f4f6;
+}
+
+.view-doc-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+}
+
+.view-doc-btn:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 768px) {
+  .hr-policies-table th,
+  .hr-policies-table td {
+    padding: 0.5rem 0.5rem;
+  }
+}
+
+/* Remove page-level scroll bar if present */
+body, html {
+  overflow: auto !important;
+}
+
+.settings-main-content {
+  overflow: visible !important;
+} 

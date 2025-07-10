@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaCloudUploadAlt, FaCheck } from 'react-icons/fa';
 import '../styles/pages/UploadPolicyPage.css';
 import { getActiveCountries, uploadFile } from '../api/authApi';
+import Modal from '../components/layout/Modal';
 
 const UploadPolicyPage = () => {
   const navigate = useNavigate();
@@ -14,6 +15,10 @@ const UploadPolicyPage = () => {
   const [isLatestQA, setIsLatestQA] = useState(true);
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoMessage, setInfoMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [navigateAfterSuccess, setNavigateAfterSuccess] = useState(false);
 
   useEffect(() => {
     getActiveCountries()
@@ -58,9 +63,11 @@ const UploadPolicyPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!docName || !docUrl || !description || !file || !country) {
-      alert('Please fill all required fields and upload a file.');
+      setInfoMessage('Please fill all required fields and upload a file.');
+      setShowInfoModal(true);
       return;
     }
+    setLoading(true);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('doc_name', docName);
@@ -70,10 +77,15 @@ const UploadPolicyPage = () => {
     formData.append('doc_latest', isLatestQA ? 'true' : 'false');
     try {
       await uploadFile(formData);
-      alert('Document uploaded successfully!');
-      navigate('/admin/records');
+      setLoading(false);
+      setInfoMessage('Document uploaded successfully!');
+      setShowInfoModal(true);
+      setNavigateAfterSuccess(true);
     } catch (err) {
-      alert(err.message || 'Failed to upload document.');
+      setLoading(false);
+      setInfoMessage(err.message || 'Failed to upload document.');
+      setShowInfoModal(true);
+      setNavigateAfterSuccess(false);
     }
   };
   
@@ -166,6 +178,35 @@ const UploadPolicyPage = () => {
           </button>
         </form>
       </main>
+      <Modal
+        open={loading}
+        title="Uploading"
+        onClose={() => {}}
+      >
+        <div>Uploading file, please wait...</div>
+      </Modal>
+      <Modal
+        open={showInfoModal}
+        title="Info"
+        onClose={() => {
+          setShowInfoModal(false);
+          if (navigateAfterSuccess) {
+            setNavigateAfterSuccess(false);
+            navigate('/admin/records');
+          }
+        }}
+        actions={
+          <button className="modal-confirm" onClick={() => {
+            setShowInfoModal(false);
+            if (navigateAfterSuccess) {
+              setNavigateAfterSuccess(false);
+              navigate('/admin/records');
+            }
+          }}>OK</button>
+        }
+      >
+        <div>{infoMessage}</div>
+      </Modal>
     </div>
   );
 };

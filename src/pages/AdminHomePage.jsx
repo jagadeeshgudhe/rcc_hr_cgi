@@ -1,37 +1,58 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import VirtualAssistanceButton from "../components/chat/VirtualAssistanceButton";
-import { FaFileAlt, FaCog, FaUsers } from 'react-icons/fa';
+import { FaFileAlt } from 'react-icons/fa';
 import "../styles/pages/HomePage.css";
+import { getActiveCountries, getFileReport } from "../api/authApi";
 
 const AdminHomePage = () => {
   const navigate = useNavigate();
   
-  const adminFeatures = [
-    {
-      title: "Records Management",
-      description: "Upload, edit, and manage HR policy documents",
-      icon: <FaFileAlt />,
-      onClick: () => navigate("/admin/records"),
-      color: "#3b82f6"
-    },
-    {
-      title: "User Management",
-      description: "Manage user accounts and permissions",
-      icon: <FaUsers />,
-      onClick: () => navigate("/admin/users"),
-      color: "#10b981"
-    },
-    {
-      title: "Settings",
-      description: "Configure system-wide settings and preferences",
-      icon: <FaCog />,
-      onClick: () => navigate("/admin/settings"),
-      color: "#8B5CF6",
-      center: true
-    }
+  const policies = [
+    "Leave Management Rule",
+    "Captive Allowance",
+    "Dress Code and Personal Hygiene",
+    "Non Standard Working Hours Management Rule",
+    "Notice Period and Recovery Management Rule",
+    "Disciplinary Actions",
+    "Travel Policy",
+    "Work From Home Policy",
+    "Compensation Policy",
+    "Performance Management"
   ];
+
+  const [countries, setCountries] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await getActiveCountries();
+        if (data.countries) setCountries(data.countries);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCountries();
+
+    // Fetch reports
+    const fetchReports = async () => {
+      try {
+        const res = await getFileReport();
+        if (res.files) setReports(res.files);
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+    fetchReports();
+  }, []);
 
   return (
     <div className="home-container">
@@ -42,28 +63,15 @@ const AdminHomePage = () => {
           <p className="subtitle">Admin Dashboard - Manage Your HR System</p>
           <p className="user-role">Administrator Panel</p>
         </div>
-        
-        {/* Admin Features Section */}
-        <div className="admin-features-section">
-          <h2>Admin Tools</h2>
-          <div className="admin-features-grid">
-            {adminFeatures.map((feature, index) => (
-              <div 
-                key={index} 
-                className={`admin-feature-card${feature.center ? ' center-card' : ''}`}
-                onClick={feature.onClick}
-                style={{ borderLeft: `4px solid ${feature.color}` }}
-              >
-                <div className="feature-icon" style={{ color: feature.color }}>
-                  {feature.icon}
-                </div>
-                <div className="feature-content">
-                  <h3>{feature.title}</h3>
-                  <p>{feature.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="policy-grid">
+          {reports.map((report, index) => (
+            <div key={report.md5_text || index} className="policy-card" onClick={() => window.open(report.doc_url, '_blank', 'noopener,noreferrer')} style={{ cursor: 'pointer' }}>
+              <span className="policy-icon">
+                <FaFileAlt />
+              </span>
+              <h3>{report.file_name}</h3>
+            </div>
+          ))}
         </div>
       </main>
       <VirtualAssistanceButton />

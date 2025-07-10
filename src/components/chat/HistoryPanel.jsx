@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { FaRegQuestionCircle, FaRegCommentDots } from 'react-icons/fa';
 import ChatBot from './ChatBot';
+import Modal from '../layout/Modal';
 
 const HistoryPanel = ({ isOpen, onClose, history, onHistoryItemClick, onClearHistory }) => {
   const [expandedItems, setExpandedItems] = useState({});
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '';
@@ -47,10 +49,12 @@ const HistoryPanel = ({ isOpen, onClose, history, onHistoryItemClick, onClearHis
   const reversedHistory = [...(history || [])].reverse();
 
   const handleClearHistory = () => {
-    if (window.confirm('Are you sure you want to clear all chat history?')) {
-      onClearHistory();
-      onClose();
-    }
+    setShowConfirmModal(true);
+  };
+  const confirmClearHistory = () => {
+    onClearHistory();
+    onClose();
+    setShowConfirmModal(false);
   };
 
   const formatBotReply = (text) => {
@@ -221,6 +225,17 @@ const HistoryPanel = ({ isOpen, onClose, history, onHistoryItemClick, onClearHis
           </button>
         </div>
       )}
+      <Modal
+        open={showConfirmModal}
+        title="Clear Chat History"
+        onClose={() => setShowConfirmModal(false)}
+        actions={[
+          <button key="cancel" className="modal-cancel" onClick={() => setShowConfirmModal(false)}>Cancel</button>,
+          <button key="confirm" className="modal-confirm" onClick={confirmClearHistory}>Clear</button>
+        ]}
+      >
+        <div>Are you sure you want to clear all chat history?</div>
+      </Modal>
     </div>
   );
 };

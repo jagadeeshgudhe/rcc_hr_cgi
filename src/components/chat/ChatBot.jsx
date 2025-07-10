@@ -5,6 +5,8 @@ import Suggestions from "./Suggestions";
 import HistoryPanel from "./HistoryPanel";
 import "../../styles/chat/ChatBot.css";
 import { categorySuggestions } from '../../data/categorySuggestions';
+import { getActiveCountries, getHRPolicyDocuments, askQA, submitFeedback } from '../../api/authApi';
+import Modal from '../layout/Modal';
 
 const API_URL = '/api/QA';  // This will be proxied by Vite
 const API_KEY = 'AIzaSyCR7AMuBCl2zj8wwX_xGxVGm6pWkA2vha';
@@ -145,6 +147,39 @@ function detectCategory(answerText) {
   return 'General';
 }
 
+// Add a function to format the answer with headings and points
+function formatAnswerWithHeadings(answer) {
+  if (!answer) return '';
+  const lines = answer.split('\n').map(l => l.trim()).filter(Boolean);
+  let result = '';
+  let inList = false;
+  let listItems = [];
+  const processList = () => {
+    if (listItems.length > 0) {
+      result += '<ul style="margin: 0.5rem 0 0.5rem 1.2rem;">' + listItems.join('') + '</ul>';
+      listItems = [];
+    }
+    inList = false;
+  };
+  lines.forEach(line => {
+    if (/^([A-Z\s]+:|[A-Z\s]{4,})$/.test(line)) {
+      processList();
+      result += `<div style='font-weight:600; margin-top:0.7em; color:#1e293b;'>${line.replace(/:$/, '')}</div>`;
+    } else if (/^[-*•]/.test(line)) {
+      inList = true;
+      listItems.push(`<li>${line.replace(/^[-*•]\s*/, '')}</li>`);
+    } else if (line.endsWith(':')) {
+      processList();
+      result += `<div style='font-weight:500; margin-top:0.5em; color:#374151;'>${line.replace(/:$/, '')}</div>`;
+    } else {
+      processList();
+      result += `<p style='margin:0.3em 0;'>${line}</p>`;
+    }
+  });
+  processList();
+  return result;
+}
+
 const ChatBot = ({ onClose, onMinimize }) => {
   const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [inputText, setInputText] = useState("");
@@ -166,6 +201,14 @@ const ChatBot = ({ onClose, onMinimize }) => {
     return savedHistoricalData ? JSON.parse(savedHistoricalData) : [];
   });
   const typingTimeoutRef = useRef(null);
+  const [countryOptions, setCountryOptions] = useState([]);
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  const [countryError, setCountryError] = useState("");
+  const [loadingPolicies, setLoadingPolicies] = useState(false);
+  const [loadingQA, setLoadingQA] = useState(false);
+  const [feedbackState, setFeedbackState] = useState({}); // { [msgIdx]: { show: bool, rating: 5|1, feedback: string, submitted: bool } }
+  const [feedbackModal, setFeedbackModal] = useState({ open: false, msgIdx: null, rating: 0, feedback: '', error: '', submitted: false });
+  const [apiErrorModal, setApiErrorModal] = useState({ open: false, message: '' });
 
   const scrollToBottom = (force = false) => {
     if (shouldAutoScroll || force) {
@@ -252,6 +295,26 @@ const ChatBot = ({ onClose, onMinimize }) => {
     return () => clearTimeout(midnightTimeout);
   }, []);
 
+  useEffect(() => {
+    // Fetch active countries on mount
+    setLoadingCountries(true);
+    getActiveCountries()
+      .then(res => {
+        if (res && Array.isArray(res.countries)) {
+          setCountryOptions(res.countries);
+        } else if (res && Array.isArray(res)) {
+          setCountryOptions(res);
+        } else {
+          setCountryOptions([]);
+        }
+        setLoadingCountries(false);
+      })
+      .catch(err => {
+        setCountryError("Failed to load countries");
+        setLoadingCountries(false);
+      });
+  }, []);
+
   const handleInputChange = (e) => {
     setInputText(e.target.value);
     
@@ -269,7 +332,7 @@ const ChatBot = ({ onClose, onMinimize }) => {
     }, 1000);
   };
 
-  const handleCountrySelection = (country) => {
+  const handleCountrySelection = async (country) => {
     setSelectedCountry(country);
     const userMessage = {
       text: country,
@@ -281,33 +344,24 @@ const ChatBot = ({ onClose, onMinimize }) => {
       }),
       isNew: true
     };
-
-    let botResponse;
-    if (country === "🇮🇳 India") {
-      botResponse = {
-        text: "Please enter your query or select the HR policy you want information about",
-        sender: "bot",
-        timestamp: new Date().toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        }),
-        isNew: true,
-        sources: [],
-        relatedQuestions: [],
-        hideFeedback: true,
-        hideSuggestions: false,
-        suggestions: [
-          "Leave Management Rule",
-          "Captive Allowance",
-          "Dress Code and Personal Hygiene",
-          "Non Standard Working Hours Management Rule",
-          "Notice Period and Recovery Management Rule"
-        ]
-      };
-    } else {
-      botResponse = {
-        text: `Currently, HR policy information for ${country.split(' ')[0]} is not available in this system. We are working to expand our policy database. For now, please contact your local HR representative.`,
+    setMessages(prev => [...prev, userMessage]);
+    setLoadingPolicies(true);
+    try {
+      const res = await getHRPolicyDocuments(country);
+      setLoadingPolicies(false);
+      let botText = '';
+      if (res && Array.isArray(res.documents) && res.documents.length > 0) {
+        botText = `<strong>Available HR Policy Documents for ${country}:</strong><ul style='margin-top:8px;'>` +
+          res.documents.map(doc => {
+            if (typeof doc === 'string') return `<li>${doc}</li>`;
+            return `<li>${doc.file_name || doc.name || doc.title || 'Untitled Document'}</li>`;
+          }).join('') +
+          '</ul>';
+      } else {
+        botText = `No HR policy documents found for <strong>${country}</strong>.`;
+      }
+      const botResponse = {
+        text: botText,
         sender: "bot",
         timestamp: new Date().toLocaleTimeString('en-US', {
           hour: 'numeric',
@@ -320,26 +374,32 @@ const ChatBot = ({ onClose, onMinimize }) => {
         hideFeedback: true,
         hideSuggestions: true
       };
+      setMessages(prev => [...prev, botResponse]);
+    } catch (err) {
+      setLoadingPolicies(false);
+      setMessages(prev => [...prev, {
+        text: `Failed to load HR policy documents for <strong>${country}</strong>.`,
+        sender: "bot",
+        timestamp: new Date().toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }),
+        isNew: true,
+        isError: true,
+        sources: [],
+        relatedQuestions: [],
+        hideFeedback: true,
+        hideSuggestions: true
+      }]);
     }
-
-    setMessages(prev => [...prev, userMessage, botResponse]);
   };
 
   const handleSendMessage = async (e, messageText = null) => {
     e?.preventDefault();
     const textToSend = messageText || inputText;
     if (!textToSend.trim()) return;
-
-    // If no country is selected, don't process the message
-    if (!selectedCountry) {
-      return;
-    }
-
-    // If country is not India, don't process the message
-    if (selectedCountry !== "🇮🇳 India") {
-      return;
-    }
-
+    if (!selectedCountry) return;
     // Add user message
     const userMessage = {
       text: textToSend,
@@ -351,139 +411,52 @@ const ChatBot = ({ onClose, onMinimize }) => {
       }),
       isNew: true
     };
-
     setMessages(prev => [...prev, userMessage]);
     setInputText("");
+    setLoadingQA(true);
     setIsBotTyping(true);
     setIsError(false);
-
     try {
-      // First, try to get a CORS pre-flight response
-      const preflightResponse = await fetch(API_URL, {
-        method: 'OPTIONS',
-        headers: {
-          'Access-Control-Request-Method': 'POST',
-          'Access-Control-Request-Headers': 'Content-Type, x-api-key',
-          'Origin': window.location.origin
-        }
-      });
-
-      // Now make the actual request
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY
-        },
-        body: JSON.stringify({
-          question: textToSend,
-          region: "IND-HR Policies"
-        })
-      });
-
-      if (!response.ok) {
-        console.error('API Error:', {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries())
-        });
-        throw new Error(`API error: ${response.status} - ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('API Response:', data); // Debug log
-
-      if (!data || !data.answer) {
-        console.error('Invalid response format:', data);
-        throw new Error('Invalid response from server');
-      }
-
-      const formattedResponse = formatResponse(data);
-      const formattedText = formatBotReply(formattedResponse.text);
-
-      // Detect the category for suggestions
-      const detectedCategory = detectCategory(formattedResponse.text);
-
-      const botMessage = {
-        text: formattedText,
-        sender: "bot",
-        timestamp: new Date().toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        }),
-        isNew: true,
-        sources: formattedResponse.sources,
-        relatedQuestions: formattedResponse.relatedQuestions || [],
-        category: detectedCategory,
-        suggestions: categorySuggestions[detectedCategory]
-      };
-
-      setMessages(prev => [...prev, botMessage]);
-      // Strip HTML tags and store clean text in history
-      const stripHtml = (html) => {
-        const temp = document.createElement('div');
-        temp.innerHTML = html;
-        return temp.textContent || temp.innerText || '';
-      };
-
-      addToHistory({
-        text: textToSend,
-        timestamp: userMessage.timestamp
-      }, {
-        text: stripHtml(formattedText),
-        timestamp: botMessage.timestamp
-      });
-    } catch (error) {
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      setIsError(true);
-
-      
-      
-      let errorMessage = "I apologize, but I'm having trouble connecting to the server. ";
-      
-      if (error.message.includes('Failed to fetch')) {
-        errorMessage += "Please check your internet connection and ensure you're not blocking any required domains.";
-      } else if (error.message.includes('NetworkError')) {
-        errorMessage += "There seems to be a network connectivity issue. Please check your connection.";
-      } else if (error.message.includes('401')) {
-        errorMessage += "There was an authentication error. Please contact support.";
-      } else if (error.message.includes('403')) {
-        errorMessage += "Access to the service is forbidden. Please verify your API key.";
-      } else if (error.message.includes('429')) {
-        errorMessage += "Too many requests. Please try again in a few minutes.";
-      } else if (error.message.includes('500')) {
-        errorMessage += "The server encountered an error. Please try again later.";
-      } else {
-        errorMessage += `Error: ${error.message}. Please try again later or contact support if the issue persists.`;
-      }
-
-
-
-      const botErrorMessage = {
-        text: errorMessage,
-        sender: "bot",
-        timestamp: new Date().toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        }),
-        isNew: true,
-        isError: true,
-        sources: [],
-        relatedQuestions: [
-          "Would you like to try asking your question again?",
-          "Can I help you with something else?"
-        ]
-      };
-      
-      setMessages(prev => [...prev, botErrorMessage]);
-    } finally {
+      const res = await askQA({ question: textToSend, region: selectedCountry });
+      setLoadingQA(false);
       setIsBotTyping(false);
+      let answerText = '';
+      if (res && res.answer) {
+        if (typeof res.answer === 'string') {
+          answerText = formatBotReply(res.answer);
+        } else if (typeof res.answer.answer === 'string') {
+          answerText = formatBotReply(res.answer.answer);
+        } else {
+          answerText = 'No relevant details found.';
+        }
+      } else {
+        answerText = 'No relevant details found.';
+      }
+      const botMessage = {
+        text: answerText,
+        sender: "bot",
+        timestamp: new Date().toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }),
+        isNew: true
+      };
+      setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      setLoadingQA(false);
+      setIsBotTyping(false);
+      setMessages(prev => [...prev, {
+        text: "I apologize, but I'm having trouble connecting to the server. Please try again later.",
+        sender: "bot",
+        timestamp: new Date().toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }),
+        isNew: true,
+        isError: true
+      }]);
     }
   };
 
@@ -499,94 +472,17 @@ const ChatBot = ({ onClose, onMinimize }) => {
 
   const formatBotReply = (text) => {
     const lines = text.split('\n').filter(line => line.trim());
-    let result = '';
-    let inList = false;
-    let listItems = [];
-    let currentSection = '';
-
-    const processList = () => {
-      if (listItems.length > 0) {
-        result += `<ul style="padding-left: 1.2rem; margin: 0.5rem 0;">${listItems.join('')}</ul>`;
-        listItems = [];
-      }
-      inList = false;
-    };
-
-    const isHeading = (line) => {
-      // Check for main headings (all caps or starts with #)
-      return (line === line.toUpperCase() && line.length > 3 && !line.includes('http')) ||
-             line.startsWith('#') ||
-             // Check for section headings (ends with :)
-             (line.endsWith(':') && line.length > 3);
-    };
-
-    const isSubHeading = (line) => {
-      // Check for subheadings (bold text or specific patterns)
-      return line.startsWith('**') && line.endsWith('**') ||
-             (line.includes(':') && line.length < 50);
-    };
-
-    lines.forEach(line => {
+    const htmlList = lines.map(line => {
       let formattedLine = line.trim();
-
-      if (formattedLine.startsWith('Document URL:')) {
-        processList();
-        const url = formattedLine.replace('Document URL:', '').trim();
-        result += `<div class="document-url" style="margin-top: 1rem; padding: 0.5rem; background: #f5f5f5; border-radius: 4px;">
-          <strong>Document URL:</strong> <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #0066cc; text-decoration: underline;">${url}</a>
-        </div>`;
-        return;
-      }
-
-      if (isHeading(formattedLine)) {
-        processList();
-        // Remove # if present
-        formattedLine = formattedLine.replace(/^#+\s*/, '');
-        // Remove trailing colon for main headings
-        formattedLine = formattedLine.replace(/:$/, '');
-        result += `<h3 style="margin: 1.5rem 0 0.5rem 0; font-weight: 600; color: #2c3e50;">${formattedLine}</h3>`;
-        currentSection = formattedLine;
-      } else if (isSubHeading(formattedLine)) {
-        processList();
-        // Remove ** if present
-        formattedLine = formattedLine.replace(/\*\*/g, '');
-        result += `<h4 style="margin: 1rem 0 0.5rem 0; font-weight: 500; color: #34495e;">${formattedLine}</h4>`;
-      } else if (formattedLine.startsWith('•') || formattedLine.startsWith('*') || formattedLine.startsWith('-')) {
-        // Handle bullet points
-        inList = true;
-        formattedLine = formattedLine.replace(/^[•\*\-]\s*/, '');
-        // Replace **bold** with <strong>bold</strong>
-        formattedLine = formattedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        // Auto-link URLs
-        formattedLine = autoLink(formattedLine);
-        listItems.push(`<li style="margin-bottom: 0.3rem;">${formattedLine}</li>`);
-      } else if (formattedLine.startsWith('➢')) {
-        // Handle special bullet points
-        inList = true;
-        formattedLine = formattedLine.replace(/^➢\s*/, '');
-        formattedLine = formattedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        formattedLine = autoLink(formattedLine);
-        listItems.push(`<li style="margin-bottom: 0.3rem; list-style-type: none;">➢ ${formattedLine}</li>`);
-      } else {
-        // Handle regular paragraphs
-        processList();
-        if (formattedLine) {
-          // Replace **bold** with <strong>bold</strong>
-          formattedLine = formattedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-          // Auto-link URLs
-          formattedLine = autoLink(formattedLine);
-          result += `<p style="margin: 0.5rem 0; line-height: 1.5;">${formattedLine}</p>`;
-        }
-      }
+      // Remove leading asterisk if present (with optional space after it)
+      formattedLine = formattedLine.replace(/^\*\s*/, '');
+      // Replace **bold** with <strong>bold</strong>
+      formattedLine = formattedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      // Auto-link URLs
+      formattedLine = autoLink(formattedLine);
+      return `<li>${formattedLine}</li>`;
     });
-
-    // Process any remaining list items
-    processList();
-
-    // Wrap the entire content in a styled container
-    return `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; color: #333; line-height: 1.6;">
-      ${result}
-    </div>`;
+    return `<ul style="padding-left: 1.2rem; margin: 0;">${htmlList.join('')}</ul>`;
   };
 
   const autoLink = (text) => {
@@ -762,6 +658,59 @@ const ChatBot = ({ onClose, onMinimize }) => {
     }
   };
 
+  // Feedback handler
+  const handleFeedbackClick = (msgIdx, rating) => {
+    setFeedbackModal({ open: true, msgIdx, rating, feedback: '', error: '', submitted: false });
+  };
+  const handleStarClick = (star) => {
+    setFeedbackModal(prev => ({ ...prev, rating: star }));
+  };
+  const handleFeedbackInput = (value) => {
+    setFeedbackModal(prev => ({ ...prev, feedback: value }));
+  };
+  const handleFeedbackSubmit = async () => {
+    if (!feedbackModal.rating) {
+      setFeedbackModal(prev => ({ ...prev, error: 'Please select a rating.' }));
+      return;
+    }
+    if (!feedbackModal.feedback.trim()) {
+      setFeedbackModal(prev => ({ ...prev, error: 'Please enter your feedback.' }));
+      return;
+    }
+    const msgIdx = feedbackModal.msgIdx;
+    const msg = messages[msgIdx];
+    try {
+      const res = await submitFeedback({
+        id: msg.id || msg.responseId || msg._id || msgIdx,
+        question: msg.question || (messages[msgIdx-1]?.text) || '',
+        response: msg.text,
+        rating: feedbackModal.rating,
+        feedback: feedbackModal.feedback
+      });
+      if (res && res.status === 'error' && res.message) {
+        setApiErrorModal({ open: true, message: res.message });
+        setFeedbackModal(prev => ({ ...prev, error: '' }));
+        return;
+      }
+      setFeedbackModal(prev => ({ ...prev, submitted: true, error: '' }));
+    } catch (e) {
+      let errorMsg = 'Failed to submit feedback.';
+      if (e && e.message) {
+        try {
+          const errObj = JSON.parse(e.message);
+          if (errObj && errObj.message) errorMsg = errObj.message;
+        } catch {
+          // If not JSON, use e.message directly if it's not the default
+          if (e.message !== 'Failed to submit feedback.') errorMsg = e.message;
+        }
+      }
+      setFeedbackModal(prev => ({ ...prev, error: errorMsg }));
+    }
+  };
+  const closeFeedbackModal = () => {
+    setFeedbackModal({ open: false, msgIdx: null, rating: 0, feedback: '', error: '', submitted: false });
+  };
+
   return (
     <>
       <div className="chatbot-container">
@@ -922,25 +871,31 @@ const ChatBot = ({ onClose, onMinimize }) => {
                     <div className="message-text" dangerouslySetInnerHTML={{ __html: message.text }} />
                     {message.showCountrySelection && (
                       <div className="country-selection">
-                        <button 
-                          onClick={() => handleCountrySelection("🇮🇳 India")}
-                          className="country-btn"
-                        >
-                          🇮🇳 India
-                        </button>
-                        <button 
-                          onClick={() => handleCountrySelection("🇩🇪 Germany")}
-                          className="country-btn"
-                        >
-                          🇩🇪 Germany
-                        </button>
-                        <button 
-                          onClick={() => handleCountrySelection("🇫🇷 France")}
-                          className="country-btn"
-                        >
-                          🇫🇷 France
-                        </button>
+                        {loadingCountries ? (
+                          <span style={{ color: '#888', fontSize: '1rem' }}>Loading countries...</span>
+                        ) : countryError ? (
+                          <span style={{ color: 'red', fontSize: '1rem' }}>{countryError}</span>
+                        ) : countryOptions.length > 0 ? (
+                          countryOptions.map((country, idx) => (
+                            <button
+                              key={country.code || country.name || idx}
+                              onClick={() => handleCountrySelection(country.name || country)}
+                              className="country-btn"
+                            >
+                              {country.code ? <span style={{fontWeight:'bold',marginRight:8}}>{country.code}</span> : null}
+                              {country.name || country}
+                            </button>
+                          ))
+                        ) : (
+                          <span style={{ color: '#888', fontSize: '1rem' }}>No countries available</span>
+                        )}
                       </div>
+                    )}
+                    {loadingPolicies && (
+                      <div style={{ color: '#888', fontSize: '1rem', margin: '1rem 0' }}>Loading HR policy documents...</div>
+                    )}
+                    {loadingQA && (
+                      <div style={{ color: '#888', fontSize: '1rem', margin: '1rem 0' }}>Getting answer...</div>
                     )}
                     {message.isEdited && <span className="edited-tag">(edited)</span>}
                     {message.sender === 'user' && (
@@ -958,28 +913,20 @@ const ChatBot = ({ onClose, onMinimize }) => {
                   <div className="message-feedback-card">
                     <div className="feedback-label">Was this helpful?</div>
                     <div className="message-feedback-icons">
-                      {!message.feedbackSubmitted ? (
-                        <>
-                          <button
-                            className="feedback-btn thumbs-up"
-                            onClick={() => handleFeedback(index, true)}
-                            title="Helpful"
-                          >
-                            👍
-                          </button>
-                          <button
-                            className="feedback-btn thumbs-down"
-                            onClick={() => handleFeedback(index, false)}
-                            title="Not helpful"
-                          >
-                            👎
-                          </button>
-                        </>
-                      ) : (
-                        <span className="feedback-submitted">
-                          {message.feedback ? '👍 Thanks for your feedback!' : '👎 Thanks for your feedback!'}
-                        </span>
-                      )}
+                      <button
+                        className="feedback-btn thumbs-up"
+                        onClick={() => handleFeedbackClick(index, 5)}
+                        title="Helpful"
+                      >
+                        👍
+                      </button>
+                      <button
+                        className="feedback-btn thumbs-down"
+                        onClick={() => handleFeedbackClick(index, 1)}
+                        title="Not helpful"
+                      >
+                        👎
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1096,6 +1043,53 @@ const ChatBot = ({ onClose, onMinimize }) => {
         onHistoryItemClick={handleHistoryItemClick}
         onClearHistory={handleClearHistory}
       />
+
+      {/* Feedback Modal */}
+      <Modal
+        open={feedbackModal.open}
+        title="Feedback"
+        onClose={closeFeedbackModal}
+        actions={feedbackModal.submitted ? [<button className="modal-confirm" onClick={closeFeedbackModal}>Close</button>] : [
+          <button className="modal-confirm" onClick={handleFeedbackSubmit}>Submit</button>,
+          <button className="modal-cancel" onClick={closeFeedbackModal}>Cancel</button>
+        ]}
+      >
+        {feedbackModal.submitted ? (
+          <div style={{fontWeight:500, color:'#2563eb'}}>Thank you for your feedback!</div>
+        ) : (
+          <div style={{textAlign:'center'}}>
+            <div style={{marginBottom:'1rem'}}>How would you rate this answer?</div>
+            <div style={{marginBottom:'1rem'}}>
+              {[1,2,3,4,5].map(star => (
+                <span
+                  key={star}
+                  style={{fontSize:'2rem',color:feedbackModal.rating>=star?'#fbbf24':'#e5e7eb',cursor:'pointer'}}
+                  onClick={()=>handleStarClick(star)}
+                  data-testid={`star-${star}`}
+                >★</span>
+              ))}
+            </div>
+            <input
+              type="text"
+              value={feedbackModal.feedback}
+              onChange={e => handleFeedbackInput(e.target.value)}
+              placeholder="Enter your feedback..."
+              required
+              style={{padding:'8px 12px',borderRadius:6,border:'1px solid #ccc',width:'90%',marginBottom:'1rem'}}
+            />
+            {feedbackModal.error && <div style={{color:'red',marginTop:'0.5rem'}}>{feedbackModal.error}</div>}
+          </div>
+        )}
+      </Modal>
+
+      {/* API Error Modal */}
+      <Modal
+        open={apiErrorModal.open}
+        title="API Error"
+        onClose={() => setApiErrorModal({ open: false, message: '' })}
+      >
+        <div style={{ color: 'red', fontWeight: 500 }}>{apiErrorModal.message}</div>
+      </Modal>
     </>
   );
 };

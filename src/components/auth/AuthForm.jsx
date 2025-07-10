@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import "../../styles/auth/AuthForm.css";
 import { registerUser } from "../../api/authApi";
+import Modal from "../layout/Modal";
 
 const EyeIcon = ({ open, onClick }) => (
   <span className="password-toggle" tabIndex={0} role="button" aria-label="Toggle password visibility" onClick={onClick}>
@@ -16,9 +17,12 @@ const EyeIcon = ({ open, onClick }) => (
   </span>
 );
 
-const EmailIcon = () => (
-  <span className="email-icon email-icon-end">
-    <svg width="20" height="20" fill="none" stroke="#4b5563" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+const UserIcon = () => (
+  <span className="user-icon user-icon-end">
+    <svg width="20" height="20" fill="none" stroke="#4b5563" strokeWidth="1.5" viewBox="0 0 24 24">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 8-4 8-4s8 0 8 4" />
+    </svg>
   </span>
 );
 
@@ -40,6 +44,8 @@ const AuthForm = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoMessage, setInfoMessage] = useState("");
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -72,32 +78,38 @@ const AuthForm = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     if (!agreeToTerms) {
-      alert("Please agree to the Terms of Use and Privacy Policy.");
+      setInfoMessage("Please agree to the Terms of Use and Privacy Policy.");
+      setShowInfoModal(true);
       return;
     }
     
     if (!role) {
-      alert("Please select a role.");
+      setInfoMessage("Please select a role.");
+      setShowInfoModal(true);
       return;
     }
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setInfoMessage("Passwords do not match!");
+      setShowInfoModal(true);
       return;
     }
 
     if (password.length < 8) {
-      alert("Password must be at least 8 characters long.");
+      setInfoMessage("Password must be at least 8 characters long.");
+      setShowInfoModal(true);
       return;
     }
 
     try {
       await registerUser({ username, usermail, password, role });
-      alert("Registration successful! Please log in.");
+      setInfoMessage("Registration successful! Please log in.");
+      setShowInfoModal(true);
       resetForm();
       toggleAuthMode();
     } catch (err) {
-      alert(err.message || "Registration failed");
+      setInfoMessage(err.message || "Registration failed");
+      setShowInfoModal(true);
     }
   };
 
@@ -141,7 +153,7 @@ const AuthForm = () => {
                 required
                 autoComplete="username"
               />
-              <EmailIcon />
+              <UserIcon />
             </div>
             <div className="password-container">
               <input
@@ -264,6 +276,13 @@ const AuthForm = () => {
       <button className="toggle-auth-button" onClick={toggleAuthMode}>
         {isLogin ? "Create an account" : "Sign in"}
       </button>
+      <Modal
+        open={showInfoModal}
+        title="Info"
+        onClose={() => setShowInfoModal(false)}
+      >
+        <div>{infoMessage}</div>
+      </Modal>
     </div>
   );
 };

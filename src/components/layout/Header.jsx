@@ -56,10 +56,7 @@ const Header = () => {
                 <HomeIcon size={16} /> Home
               </Link>
               <Link to="/admin/records" className="nav-link">
-                <FileText size={16} /> Records
-              </Link>
-              <Link to="/admin/users" className="nav-link">
-                <Users size={16} /> Users
+                <FileText size={16} /> Document Upload
               </Link>
               <Link to="/admin/settings" className="nav-link">
                 <Cog size={16} /> Settings

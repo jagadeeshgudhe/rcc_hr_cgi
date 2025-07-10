@@ -1,14 +1,22 @@
 import React, { useState } from "react";
 import "./uploadform.css";
+import Modal from './components/layout/Modal';
 
 const UploadForm = ({ onUpload }) => {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState("");
   const [classification, setClassification] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoMessage, setInfoMessage] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!allFieldsFilled) {
+      setInfoMessage('Please fill all fields.');
+      setShowInfoModal(true);
+      return;
+    }
     if (file && title && classification) {
       setShowPreview(true);
     } else {
@@ -93,6 +101,13 @@ const UploadForm = ({ onUpload }) => {
           </div>
         </div>
       )}
+      <Modal
+        open={showInfoModal}
+        title="Info"
+        onClose={() => setShowInfoModal(false)}
+      >
+        <div>{infoMessage}</div>
+      </Modal>
     </div>
   );
 };

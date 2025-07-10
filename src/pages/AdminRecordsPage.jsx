@@ -4,6 +4,7 @@ import Header from "../components/layout/Header";
 import { FaUpload, FaEye, FaEdit, FaTrash, FaArrowLeft, FaFileAlt, FaDownload } from 'react-icons/fa';
 import "../styles/pages/AdminRecordsPage.css";
 import { getActiveCountries, getFileReport, deleteFileEntries } from '../api/authApi';
+import Modal from '../components/layout/Modal';
 
 const AdminRecordsPage = () => {
   const navigate = useNavigate();
@@ -11,6 +12,8 @@ const AdminRecordsPage = () => {
   const [previewDocument, setPreviewDocument] = useState(null);
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState('');
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoMessage, setInfoMessage] = useState("");
 
   // Remove all useEffect hooks related to file fetching
 
@@ -47,7 +50,7 @@ const AdminRecordsPage = () => {
           <button className="back-button" onClick={() => navigate("/admin")}>
             <FaArrowLeft /> Back to Admin Dashboard
           </button>
-          <h1>Records Management</h1>
+          <h1>Document Management</h1>
           <button 
             className="upload-button"
             onClick={() => navigate('/admin/records/upload')}
@@ -55,7 +58,11 @@ const AdminRecordsPage = () => {
             <FaUpload /> Upload HR Policy File
           </button>
         </div>
-        {/* Remove file listing and empty state UI */}
+        <div className="center-upload-container">
+          <button className="center-upload-button" onClick={() => navigate('/admin/records/upload')}>
+            <FaUpload style={{ marginRight: '10px' }} /> Upload Document
+          </button>
+        </div>
       </main>
 
       {/* Preview Modal */}
@@ -91,7 +98,7 @@ const AdminRecordsPage = () => {
             <div className="modal-actions">
               <button 
                 className="download-button"
-                onClick={() => alert("Download functionality would be implemented here")}
+                onClick={() => { setInfoMessage('Download functionality would be implemented here.'); setShowInfoModal(true); }}
               >
                 <FaDownload /> Download
               </button>
@@ -105,6 +112,13 @@ const AdminRecordsPage = () => {
           </div>
         </div>
       )}
+      <Modal
+        open={showInfoModal}
+        title="Info"
+        onClose={() => setShowInfoModal(false)}
+      >
+        <div>{infoMessage}</div>
+      </Modal>
     </div>
   );
 };

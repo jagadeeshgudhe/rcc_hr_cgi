@@ -136,7 +136,7 @@ const AuthForm = () => {
   return (
     <div className={`auth-container ${transitionClass}`}>
       <div className="auth-header">
-        <h2>{isLogin ? "Welcome Back" : "Create Account"}</h2>
+        <h2>{isLogin ? "" : "Create Account"}</h2>
       </div>
       <form
         className="auth-form"

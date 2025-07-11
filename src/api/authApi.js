@@ -98,6 +98,9 @@ export async function askQA({ question, region }) {
 
 export async function submitFeedback({ id, question, response: answer, rating, feedback }) {
   const token = localStorage.getItem('jwt_token');
+  // Debug log: show payload and token presence
+  console.log('submitFeedback payload:', { id, question, response: answer, rating, feedback });
+  console.log('JWT token present:', !!token);
   const response = await fetch('/submit-feedback', {
     method: 'POST',
     headers: {
@@ -106,11 +109,22 @@ export async function submitFeedback({ id, question, response: answer, rating, f
     },
     body: JSON.stringify({ id, question, response: answer, rating, feedback }),
   });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Failed to submit feedback');
+  // Debug log: show status and response
+  console.log('submitFeedback response status:', response.status);
+  let responseData;
+  try {
+    responseData = await response.json();
+    console.log('submitFeedback response data:', responseData);
+  } catch (e) {
+    console.error('submitFeedback response not JSON:', e);
+    responseData = null;
   }
-  return response.json();
+  if (!response.ok) {
+    const errorMsg = (responseData && responseData.message) || 'Failed to submit feedback';
+    console.error('submitFeedback error:', errorMsg);
+    throw new Error(errorMsg);
+  }
+  return responseData;
 }
 
 export async function uploadFile(formData) {

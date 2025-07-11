@@ -497,6 +497,13 @@ const ChatBot = ({ onClose, onMinimize }) => {
     });
   };
 
+  // Utility to strip HTML tags from a string
+  function stripHtml(html) {
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    return temp.textContent || temp.innerText || '';
+  }
+
   const handleSaveEdit = async (index) => {
     if (!editText.trim()) return;
 
@@ -683,7 +690,7 @@ const ChatBot = ({ onClose, onMinimize }) => {
       const res = await submitFeedback({
         id: msg.id || msg.responseId || msg._id || msgIdx,
         question: msg.question || (messages[msgIdx-1]?.text) || '',
-        response: msg.text,
+        response: stripHtml(msg.text), // Ensure plain text only
         rating: feedbackModal.rating,
         feedback: feedbackModal.feedback
       });

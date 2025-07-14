@@ -3,7 +3,7 @@ import Header from "../components/layout/Header";
 import VirtualAssistanceButton from "../components/chat/VirtualAssistanceButton";
 import { FaFileAlt } from 'react-icons/fa';
 import "../styles/pages/HomePage.css";
-import { getActiveCountries } from "../api/authApi";
+import { getActiveCountries, getFileReport } from "../api/authApi";
 import { useAuth } from "../context/AuthContext";
 
 const UserHomePage = () => {
@@ -24,6 +24,7 @@ const UserHomePage = () => {
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [reports, setReports] = useState([]);
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -39,6 +40,18 @@ const UserHomePage = () => {
       }
     };
     if (token) fetchCountries();
+  }, [token]);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const res = await getFileReport();
+        if (res.files) setReports(res.files);
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+    if (token) fetchReports();
   }, [token]);
 
   return (
@@ -61,12 +74,12 @@ const UserHomePage = () => {
           </ul>
         </div>
         <div className="policy-grid">
-          {policies.map((policy, index) => (
-            <div key={index} className="policy-card">
+          {reports.map((report, index) => (
+            <div key={report.md5_text || index} className="policy-card" onClick={() => window.open(report.doc_url, '_blank', 'noopener,noreferrer')} style={{ cursor: 'pointer' }}>
               <span className="policy-icon">
                 <FaFileAlt />
               </span>
-              <h3>{policy}</h3>
+              <h3>{report.file_name}</h3>
             </div>
           ))}
         </div>

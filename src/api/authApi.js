@@ -1,4 +1,3 @@
-// Authentication API utility
 const BASE_URL = "https://hrqa-api-439963159684.us-central1.run.app";
 
 export async function registerUser({ username, usermail, password, role }) {
@@ -99,7 +98,7 @@ export async function askQA({ question, region }) {
 export async function submitFeedback({ id, question, response: answer, rating, feedback }) {
   const token = localStorage.getItem('jwt_token');
   // Debug log: show payload and token presence
-  console.log('submitFeedback payload:', { id, question, response: answer, rating, feedback });
+  console.log('submitFeedback payloadtoString():', { id, question, response: answer, rating, feedback });
   console.log('JWT token present:', !!token);
   const response = await fetch('/submit-feedback', {
     method: 'POST',
@@ -107,7 +106,7 @@ export async function submitFeedback({ id, question, response: answer, rating, f
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ id, question, response: answer, rating, feedback }),
+    body: JSON.stringify({ id, question, response: answer, rating:rating.toString(), feedback }),
   });
   // Debug log: show status and response
   console.log('submitFeedback response status:', response.status);

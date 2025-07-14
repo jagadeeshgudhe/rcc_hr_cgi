@@ -125,12 +125,12 @@ const AuthForm = () => {
   };
 
   const toggleAuthMode = () => {
-    setTransitionClass("slide-out");
+    setTransitionClass("slide-out");2
     setTimeout(() => {
       setIsLogin(!isLogin);
       resetForm();
       setTransitionClass("slide-in");
-    }, 300);
+    }, 300);image.png
   };
 
   return (

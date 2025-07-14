@@ -1,43 +1,59 @@
-.admin-settings-container {
+.settings-bg {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-}
-
-.settings-main-content {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  height: 80vh;
-  overflow-y: auto;
-}
-
-.settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.settings-header h1 {
-  margin: 0;
-  color: #333;
-  font-size: 2rem;
-  font-weight: 600;
-}
-
-.settings-content {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   
 }
 
-/* New Styles for Document Report */
+.settings-header-card {
+  width: 73%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #c33764 0%, #1d2671 100%);
+  padding: 1.5rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(30,58,138,0.10), 0 1.5px 4px rgba(0,0,0,0.04);
+  margin-bottom: 3rem;
+  margin-top: 2rem;
+  color: #fff;
+}
+
+.settings-title {
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin: 0;
+  color: #fff !important;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.settings-header-card .back-button {
+  margin-right: 0;
+  
+}
+
+.settings-content-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 60vh;
+}
+
+.card, .documents-report-section.card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(30,58,138,0.10), 0 1.5px 4px rgba(0,0,0,0.04);
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  margin-bottom: 2rem;
+  max-width: 900px;
+  width: 100%;
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+
+
 .documents-report-section h2 {
   font-size: 1.5rem;
   color: #374151;
@@ -114,8 +130,26 @@
   letter-spacing: 0.05em;
 }
 
-.documents-table tbody tr:hover {
+/* Only highlight row when not hovering over actions-cell */
+.documents-table tbody tr:hover > td:not(.actions-cell) {
   background-color: #f3f4f6;
+}
+
+/* Prevent row highlight when hovering actions-cell or its buttons */
+.actions-cell:hover,
+.actions-cell:focus-within {
+  background: transparent !important;
+}
+
+.actions-cell .link-button:hover,
+.actions-cell .link-button:focus {
+  z-index: 1;
+  position: relative;
+}
+
+/* Remove the old row hover rule if present */
+.documents-table tbody tr:hover {
+  background: none;
 }
 
 .actions-cell {
@@ -126,15 +160,19 @@
 .link-button {
   display: inline-flex;
   align-items: center;
-  gap: 0.4em;
+  justify-content: center;
+  gap: 0.3em;
   border: none;
-  padding: 0.3rem 0.7rem;
+  padding: 0.36rem 0.85rem;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.82rem;
-  transition: background-color 0.2s;
-  font-weight: 500;
+  font-size: 0.93rem;
+  font-weight: 600;
   text-decoration: none;
+  min-width: 80px;
+  min-height: 32px;
+  box-shadow: 0 1px 3px rgba(30,58,138,0.06);
+  transition: background 0.16s, box-shadow 0.16s, transform 0.12s, filter 0.16s;
 }
 
 .link-button.open {
@@ -318,10 +356,35 @@ body, html {
   background: linear-gradient(90deg, #ba2222, #1e3a8a);
 } 
 
+/* Header row for settings */
+.settings-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2rem 0 1.5rem 0;
+  padding: 0 2rem;
+}
+.settings-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #22223b;
+  margin: 0;
+}
+
+.multi-delete-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 1rem 0;
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 1.08rem;
+}
+
 .settings-table-wrapper {
   overflow-x: auto;
   margin-bottom: 2rem;
-  max-width: 900px;
+  max-width: 1000px;
 }
 
 .settings-table-container {
@@ -335,7 +398,7 @@ body, html {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 500px;
+  min-width: 600px;
   background: #fff;
   box-shadow: 0 2px 12px rgba(30,58,138,0.07), 0 1.5px 6px rgba(0,0,0,0.04);
   border-radius: 12px;
@@ -409,6 +472,94 @@ body, html {
   text-align: center;
 }
 
+.actions-cell {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 240px;
+  width: 100%;
+}
+
+.link-button:active {
+  transform: scale(0.97);
+}
+
+.link-button:hover {
+  filter: brightness(0.93);
+  box-shadow: 0 4px 14px rgba(30,58,138,0.13);
+  transform: translateY(-2px) scale(1.03);
+  opacity: 0.97;
+}
+
+.link-button:not(:last-child) {
+  margin-right: 0.2rem;
+}
+
+.link-button[style*='#f59e42'] {
+  background: #f59e42 !important;
+  color: #fff !important;
+}
+.link-button[style*='#22c55e'] {
+  background: #22c55e !important;
+  color: #fff !important;
+}
+.link-button[style*='#dc2626'] {
+  background: #dc2626 !important;
+  color: #fff !important;
+}
+
+.settings-page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2.5rem auto 1.5rem auto;
+  max-width: 900px;
+  width: 100%;
+  padding: 0 0.5rem;
+}
+
+.settings-title {
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin: 0;
+  color: #22223b;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 900px) {
+  .settings-header-card {
+    flex-direction: column;
+    gap: 1.2rem;
+    padding: 1.2rem 1rem;
+    text-align: center;
+  }
+  .settings-title {
+    margin: 0;
+  }
+  .card, .documents-report-section.card {
+    min-width: 0;
+    width: 100%;
+    padding: 1.5rem 0.5rem 1.2rem 0.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .settings-title {
+    font-size: 1.3rem;
+  }
+  .settings-header-card {
+    padding: 1rem 0.2rem 1rem 0.2rem;
+  }
+  .card, .documents-report-section.card {
+    padding: 1rem 0.2rem 1rem 0.2rem;
+  }
+}
+
+/* Remove old .settings-page-header-row if present */
+.settings-page-header-row { display: none !important; }
+
 /* Custom scrollbar styling */
 .settings-table-container::-webkit-scrollbar, .settings-table tbody::-webkit-scrollbar {
   width: 10px;
@@ -420,14 +571,4 @@ body, html {
 }
 .settings-table-container::-webkit-scrollbar-thumb:hover, .settings-table tbody::-webkit-scrollbar-thumb:hover {
   background: #888;
-}
-
-@media (max-width: 700px) {
-  .settings-table {
-    font-size: 14px;
-    min-width: 400px;
-  }
-  .settings-table thead th, .settings-table .file-name-cell {
-    padding: 10px 8px;
-  }
 } 

@@ -7,6 +7,7 @@ import "../../styles/chat/ChatBot.css";
 import { categorySuggestions } from '../../data/categorySuggestions';
 import { getActiveCountries, getHRPolicyDocuments, askQA, submitFeedback } from '../../api/authApi';
 import Modal from '../layout/Modal';
+import { FaRegStar, FaStar } from 'react-icons/fa';
 
 const API_URL = '/api/QA';  // This will be proxied by Vite
 const API_KEY = 'AIzaSyCR7AMuBCl2zj8wwX_xGxVGm6pWkA2vha';
@@ -209,6 +210,7 @@ const ChatBot = ({ onClose, onMinimize }) => {
   const [feedbackState, setFeedbackState] = useState({}); // { [msgIdx]: { show: bool, rating: 5|1, feedback: string, submitted: bool } }
   const [feedbackModal, setFeedbackModal] = useState({ open: false, msgIdx: null, rating: 0, feedback: '', error: '', submitted: false });
   const [apiErrorModal, setApiErrorModal] = useState({ open: false, message: '' });
+  const [hoveredStar, setHoveredStar] = useState(0);
 
   const scrollToBottom = (force = false) => {
     if (shouldAutoScroll || force) {
@@ -901,9 +903,6 @@ const ChatBot = ({ onClose, onMinimize }) => {
                     {loadingPolicies && (
                       <div style={{ color: '#888', fontSize: '1rem', margin: '1rem 0' }}>Loading HR policy documents...</div>
                     )}
-                    {loadingQA && (
-                      <div style={{ color: '#888', fontSize: '1rem', margin: '1rem 0' }}>Getting answer...</div>
-                    )}
                     {message.isEdited && <span className="edited-tag">(edited)</span>}
                     {message.sender === 'user' && (
                       <button 
@@ -965,30 +964,6 @@ const ChatBot = ({ onClose, onMinimize }) => {
                   <span></span>
                   <span></span>
                 </div>
-              </div>
-            </div>
-          )}
-          {isUserTyping && (
-            <div className="message user typing">
-              <div className="message-bubble">
-                <div className="typing-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-              <div className="message-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="icon"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <circle cx="12" cy="7" r="4" />
-                  <path d="M5.5 21h13a2 2 0 002-2v-1a6 6 0 00-6-6h-5a6 6 0 00-6 6v1a2 2 0 002 2z" />
-                </svg>
               </div>
             </div>
           )}
@@ -1054,37 +1029,42 @@ const ChatBot = ({ onClose, onMinimize }) => {
       {/* Feedback Modal */}
       <Modal
         open={feedbackModal.open}
-        title="Feedback"
+        title={<span style={{color:'#b91c1c',fontWeight:600,fontSize:'1.05rem'}}>Feedback</span>}
         onClose={closeFeedbackModal}
-        actions={feedbackModal.submitted ? [<button className="modal-confirm" onClick={closeFeedbackModal}>Close</button>] : [
-          <button className="modal-confirm" onClick={handleFeedbackSubmit}>Submit</button>,
-          <button className="modal-cancel" onClick={closeFeedbackModal}>Cancel</button>
+        style={{ maxWidth: 250, minWidth: 180, padding: '0.2rem 0.2rem' }}
+        actions={feedbackModal.submitted ? [<button className="modal-confirm" style={{fontSize:'0.92rem',padding:'6px 18px',minWidth:70}} onClick={closeFeedbackModal}>Close</button>] : [
+          <button className="modal-confirm" style={{fontSize:'0.92rem',padding:'6px 18px',minWidth:70}} onClick={handleFeedbackSubmit}>Submit</button>,
+          <button className="modal-cancel" style={{fontSize:'0.92rem',padding:'6px 18px',minWidth:70}} onClick={closeFeedbackModal}>Cancel</button>
         ]}
       >
         {feedbackModal.submitted ? (
-          <div style={{fontWeight:500, color:'#2563eb'}}>Thank you for your feedback!</div>
+          <div style={{fontWeight:500, color:'#2563eb', textAlign:'center', fontSize:'0.98rem'}}>Thank you for your feedback!</div>
         ) : (
-          <div style={{textAlign:'center'}}>
-            <div style={{marginBottom:'1rem'}}>How would you rate this answer?</div>
-            <div style={{marginBottom:'1rem'}}>
+          <div style={{textAlign:'center', padding:'0.2rem 0'}}>
+            <div style={{marginBottom:'0.5rem', fontWeight:500, fontSize:'0.98rem'}}>How would you rate this answer?</div>
+            <div style={{marginBottom:'0.5rem', display:'flex', justifyContent:'center', gap:'0.1rem'}}>
               {[1,2,3,4,5].map(star => (
                 <span
                   key={star}
-                  style={{fontSize:'2rem',color:feedbackModal.rating>=star?'#fbbf24':'#e5e7eb',cursor:'pointer'}}
+                  style={{fontSize:'1.15rem', color:(hoveredStar || feedbackModal.rating)>=star?'#fbbf24':'#cbd5e1', cursor:'pointer', transition:'color 0.2s', margin:'0 1px'}}
                   onClick={()=>handleStarClick(star)}
                   data-testid={`star-${star}`}
-                >★</span>
+                  onMouseOver={()=>setHoveredStar(star)}
+                  onMouseLeave={()=>setHoveredStar(0)}
+                >
+                  {(hoveredStar || feedbackModal.rating)>=star ? <FaStar /> : <FaRegStar />}
+                </span>
               ))}
             </div>
-            <input
-              type="text"
+            <textarea
               value={feedbackModal.feedback}
               onChange={e => handleFeedbackInput(e.target.value)}
               placeholder="Enter your feedback..."
               required
-              style={{padding:'8px 12px',borderRadius:6,border:'1px solid #ccc',width:'90%',marginBottom:'1rem'}}
+              rows={4}
+              style={{padding:'7px 10px',borderRadius:5,border:'1px solid #ccc',width:'90%',marginBottom:'0.5rem', fontSize:'0.93rem', resize:'vertical', minHeight:'60px', maxHeight:'120px'}}
             />
-            {feedbackModal.error && <div style={{color:'red',marginTop:'0.5rem'}}>{feedbackModal.error}</div>}
+            {feedbackModal.error && <div style={{color:'red',marginTop:'0.3rem', fontSize:'0.92rem'}}>{feedbackModal.error}</div>}
           </div>
         )}
       </Modal>

@@ -5,7 +5,7 @@ import { FaArrowLeft } from 'react-icons/fa';
 import { FiExternalLink, FiCopy, FiDownload } from 'react-icons/fi';
 import "../styles/pages/AdminSettingsPage.css";
 import { hrPoliciesData } from "../data/hrPolicies";
-import { getFileReport, deleteFileEntries, loginUser } from '../api/authApi';
+import { getFileReport, deleteFileEntries, loginUser, toggleFileActiveStatus } from '../api/authApi';
 import Modal from '../components/layout/Modal';
 
 const AdminSettingsPage = () => {
@@ -22,6 +22,10 @@ const AdminSettingsPage = () => {
   const [infoMessage, setInfoMessage] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [multiDeleteMode, setMultiDeleteMode] = useState(false);
+  const [showActiveModal, setShowActiveModal] = useState(false);
+  const [activeTarget, setActiveTarget] = useState(null);
+  const [activeLoading, setActiveLoading] = useState(false);
+  const [activeError, setActiveError] = useState("");
   // Remove the loading modal and related state/logic
 
   // Use HR policies for the documents table
@@ -118,30 +122,55 @@ const AdminSettingsPage = () => {
     }
   };
 
-  return (
-    <div className="admin-settings-container">
-      <Header />
-      
-      <main className="settings-main-content">
-        <div className="settings-header">
-          <button className="back-button" onClick={() => navigate("/admin")}>
-            <FaArrowLeft /> Back to Admin Dashboard
-          </button>
-          <h1>System Settings</h1>
-        </div>
+  const handleToggleActive = (file_name, md5_text, isActive) => {
+    setActiveTarget({ file_name, md5_text, active_flag: isActive }); // use current state
+    setActiveError("");
+    setShowActiveModal(true);
+  };
+  const handleActiveConfirm = async () => {
+    setActiveLoading(true);
+    setActiveError("");
+    // Determine the new flag based on current state
+    const newFlag = activeTarget.active_flag ? 0 : 1;
+    // Optimistically update UI
+    const prevDocs = documents;
+    setDocuments(prevDocs => prevDocs.map(doc =>
+      doc.md5_text === activeTarget.md5_text
+        ? { ...doc, active_file: String(newFlag) }
+        : doc
+    ));
+    setShowActiveModal(false); // Close modal immediately for instant feedback
+    try {
+      await toggleFileActiveStatus({ file_name: activeTarget.file_name, md5_text: activeTarget.md5_text, active_flag: String(newFlag) });
+      const res = await getFileReport();
+      setDocuments(res.files || []);
+      setInfoMessage(`File Active Flag changed for-->${activeTarget.file_name}`);
+      setShowInfoModal(true);
+    } catch (err) {
+      setDocuments(prevDocs); // Revert on error
+      setInfoMessage('Error changing file active status.');
+      setShowInfoModal(true);
+    } finally {
+      setActiveLoading(false);
+    }
+  };
 
-        <div className="settings-content">
-          <div className="documents-report-section">
+  return (
+    <div className="admin-settings-container settings-bg">
+      <Header />
+      <main className="settings-main-content">
+        <div className="settings-header-card">
+          <button className="back-button" onClick={() => navigate("/admin")}> <FaArrowLeft /> Back to Admin Dashboard </button>
+          <h1 className="settings-title">System Settings</h1>
+          <div style={{ width: 180 }}></div> {/* Placeholder for symmetry, like upload button in records page */}
+        </div>
+        <div className="settings-content settings-content-centered">
+          <div className="documents-report-section card">
             <h2>Documents Report</h2>
-            {/* Move Delete Selected button above the table */}
             {selectedFiles.length > 0 && (
-              <div style={{ margin: '1rem 0', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <span style={{ fontWeight: 500, color: '#1e293b', fontSize: '1.08rem' }}>
-                  {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} selected
-                </span>
-                <button className="modal-confirm" onClick={handleMultiDelete}>
-                  Delete Selected
-                </button>
+              <div className="multi-delete-bar">
+                <span>{selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} selected</span>
+                <button className="modal-confirm" onClick={handleMultiDelete}>Delete Selected</button>
               </div>
             )}
             <div className="settings-table-wrapper">
@@ -149,34 +178,27 @@ const AdminSettingsPage = () => {
                 <table className="settings-table">
                   <thead>
                     <tr>
-                      <th className="checkbox-col">
-                        <input
-                          type="checkbox"
-                          checked={selectedFiles.length === documents.length && documents.length > 0}
-                          onChange={e => handleSelectAll(e.target.checked)}
-                        />
-                      </th>
+                      <th className="checkbox-col"><input type="checkbox" checked={selectedFiles.length === documents.length && documents.length > 0} onChange={e => handleSelectAll(e.target.checked)} /></th>
                       <th>File Name</th>
+                      <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {documents.length > 0 ? (
                       documents.map((doc) => (
                         <tr key={doc.md5_text} className="settings-table-row">
-                          <td className="checkbox-col">
-                            <input
-                              type="checkbox"
-                              checked={selectedFiles.includes(doc.md5_text)}
-                              onChange={() => handleSelectFile(doc.md5_text)}
-                            />
-                          </td>
+                          <td className="checkbox-col"><input type="checkbox" checked={selectedFiles.includes(doc.md5_text)} onChange={() => handleSelectFile(doc.md5_text)} /></td>
                           <td className="file-name-cell">{doc.file_name}</td>
+                          <td>{doc.active_file === '1' ? 'Active' : 'Inactive'}</td>
+                          <td className="actions-cell">
+                            <button className="link-button" style={{ background: doc.active_file === '1' ? '#f59e42' : '#22c55e', color: '#fff' }} onClick={() => handleToggleActive(doc.file_name, doc.md5_text, doc.active_file === '1')} title={doc.active_file === '1' ? 'Deactivate this file (make unavailable)' : 'Activate this file (make available)'} aria-label={doc.active_file === '1' ? 'Deactivate file' : 'Activate file'}>{doc.active_file === '1' ? 'Deactivate' : 'Activate'}</button>
+                            <button className="link-button" style={{ background: '#dc2626', color: '#fff' }} onClick={() => handleDelete(doc.file_name, doc.md5_text)} title={'Delete this file'} aria-label="Delete file">Delete</button>
+                          </td>
                         </tr>
                       ))
                     ) : (
-                      <tr>
-                        <td colSpan="2" className="settings-no-files">No documents to display.</td>
-                      </tr>
+                      <tr><td colSpan="4" className="settings-no-files">No documents to display.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -223,13 +245,39 @@ const AdminSettingsPage = () => {
           </div>
         </div>
       )}
+      {/* Deactivate/Activate Confirmation Modal */}
+      {showActiveModal && (
+        <div className="modal-overlay">
+          <div className="modal delete-modal">
+            <h3 style={{ color: '#b91c1c', fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.7rem', lineHeight: 1.3 }}>
+              Sure to change ActiveFlag of<br/>
+              <span style={{ fontWeight: 700, color: '#b91c1c', wordBreak: 'break-all' }}>{activeTarget?.file_name}</span> file?
+            </h3>
+            <p style={{ color: '#ba2222', fontWeight: 500, fontSize: '1.05rem', margin: '0.7rem 0 1.2rem 0', textAlign: 'center' }}>
+              {activeTarget?.active_flag
+                ? "If you Deactivate, the file won't be available for QA however you can activate again."
+                : "If you Activate, the file will be available for QA."}
+            </p>
+            {activeError && <p style={{ color: 'red', margin: '0.5rem 0' }}>{activeError}</p>}
+            <div className="modal-actions">
+              <button onClick={() => setShowActiveModal(false)} className="modal-cancel">Cancel</button>
+              <button onClick={handleActiveConfirm} className="modal-confirm" disabled={activeLoading}>
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Remove Modal for loading */}
       <Modal
         open={showInfoModal}
         title="Info"
         onClose={() => setShowInfoModal(false)}
       >
-        <div>{infoMessage}</div>
+        <div style={{ textAlign: 'center', fontSize: '1.08rem', fontWeight: 500 }}>
+          File Active Flag changed for<br/>
+          <span style={{ fontWeight: 700, color: '#1e293b', wordBreak: 'break-all' }}>{infoMessage.replace('File Active Flag changed for-->', '')}</span>
+        </div>
       </Modal>
     </div>
   );

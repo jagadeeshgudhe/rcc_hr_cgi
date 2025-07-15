@@ -73,7 +73,7 @@ const AdminHomePage = () => {
           <h1 className="homepage-title">HR QA PORTAL</h1>
         </div>
         <div className="policy-grid-card">
-          <div className="policy-grid">
+          <div className={`policy-grid${reports.length > 8 ? ' scrollable' : ''}`}>
             {reports.map((report, index) => (
               <div key={report.md5_text || index} className="policy-card" onClick={() => window.open(report.doc_url, '_blank', 'noopener,noreferrer')} style={{ cursor: 'pointer', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                 {getPolicyIcon(report.file_name)}

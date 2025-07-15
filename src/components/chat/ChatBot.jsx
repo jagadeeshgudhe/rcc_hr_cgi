@@ -377,6 +377,7 @@ const ChatBot = ({ onClose, onMinimize }) => {
         hideSuggestions: true
       };
       setMessages(prev => [...prev, botResponse]);
+      addToHistory(userMessage, botResponse);
     } catch (err) {
       setLoadingPolicies(false);
       setMessages(prev => [...prev, {
@@ -445,6 +446,7 @@ const ChatBot = ({ onClose, onMinimize }) => {
         isNew: true
       };
       setMessages(prev => [...prev, botMessage]);
+      addToHistory(userMessage, botMessage);
     } catch (error) {
       setLoadingQA(false);
       setIsBotTyping(false);
@@ -745,7 +747,6 @@ const ChatBot = ({ onClose, onMinimize }) => {
               className="control-btn history"
               onClick={() => setIsHistoryOpen(true)}
               title="Chat History"
-              disabled={chatHistory.length === 0}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

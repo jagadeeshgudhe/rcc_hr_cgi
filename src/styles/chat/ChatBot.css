@@ -1,7 +1,9 @@
 .chatbot-container {
   position: fixed;
-  bottom: 8px;
-  right: 300px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* Remove right and bottom properties for centering */
   width: min(90vw, 730px);
   height: min(90vh, 591px);
   background: #f8f9fa;
@@ -32,6 +34,21 @@
     bottom: 0;
     right: 0;
     border-radius: 0;
+  }
+}
+
+@media (min-width: 1366px) {
+  .chatbot-container {
+    max-width: 730px;
+    left: unset;
+    right: 60px;
+    margin-left: auto;
+    margin-right: 0;
+  }
+  .history-panel.professional {
+    max-width: 630px;
+    margin-left: auto;
+    margin-right: 0;
   }
 }
 
